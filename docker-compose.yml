@@ -1,0 +1,71 @@
+version: "3"
+services:
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - HOSTNAME="Docker Plex"
+    volumes:
+      - /home/daniel/Developer/hms/config/Plex:/config
+      - /home/daniel/Developer/hms/plex_tmp:/transcode
+      - /home/daniel/Plex:/data
+      - /run/media/daniel/4CA86EDEA86EC5D4/Users/Daniel/Plex:/windows_media
+    restart: always
+  jackett:
+    image: linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /home/daniel/Developer/hms/config/Jackett:/config
+      - /home/daniel/Downloads:/downloads
+    ports:
+      - 9117:9117
+    restart: always
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /home/daniel/Developer/hms/config/Sonarr:/config
+      - /home/daniel/Plex/TV:/tv
+      - /home/daniel/Developer/hms/config/NZBGet/downloads:/downloads
+    ports:
+      - 8989:8989
+    restart: always
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /home/daniel/Developer/hms/config/Radarr:/config
+      - /home/daniel/Plex/Movies:/movies
+      - /home/daniel/Developer/hms/config/NZBGet/downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: always
+  nzbget:
+    image: linuxserver/nzbget:latest
+    container_name: nzbget
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /home/daniel/Developer/hms/config/NZBGet:/config
+      - /home/daniel/Developer/hms/config/NZBGet/downloads:/downloads
+    ports:
+      - 6789:6789
+    restart: always
