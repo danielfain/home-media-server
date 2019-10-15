@@ -39,8 +39,8 @@ func init() {
 	viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
 	viper.SetDefault("license", "apache")
 
-	rootCmd.AddCommand(addCmd)
-	rootCmd.AddCommand(initCmd)
+	// rootCmd.AddCommand(addCmd)
+	// rootCmd.AddCommand(initCmd)
 }
 
 func initConfig() {
@@ -51,7 +51,7 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			er(err)
+			// er(err)
 		}
 
 		// Search config in home directory with name ".cobra" (without extension).
