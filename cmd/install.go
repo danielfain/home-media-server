@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +24,15 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Run the setup for home media server",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Home Media Server Setup")
+		cmd.Println("Home Media Server Setup")
+		cmd.Println()
+
+		option := args[0]
+
+		if option == "full" {
+			cmd.Println("Installing the full Home Media Server with Sonarr, Radarr, Jackett, Transmission, and Plex")
+			composeFile := Service{}
+			cmd.Println(composeFile.Name)
+		}
 	},
 }
