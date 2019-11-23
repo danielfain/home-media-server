@@ -33,6 +33,7 @@ var installCmd = &cobra.Command{
 			cmd.Println("Installing the full Home Media Server with Sonarr, Radarr, Jackett, Transmission, and Plex")
 			composeFile := Service{}
 			cmd.Println(composeFile.Name)
+			cmd.Println("testing")
 		}
 	},
 }
