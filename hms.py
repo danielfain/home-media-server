@@ -2,19 +2,38 @@ import click
 import yaml
 
 @click.command()
-@click.option("--puid", prompt="PUID for containers", help="The PUID of the user to run docker container from")
-@click.option("--pgid", prompt="PGID for containers", help="The PGID of the user to run docker container from (usually docker group id)")
-@click.option("--tz", prompt="Timezone for containers (America/New_York) format", help="The timezone to set the docker containers to (America/New_York)")
-def generate(puid, pgid, tz):
+@click.option("--puid", prompt="PUID")
+@click.option("--pgid", prompt="PGID")
+@click.option("--tz", prompt="Timezone", default="America/New_York")
+@click.option("--vpn", prompt="Transmission + VPN", default="y")
+@click.option("--nzbget", prompt="NZBGet", default="y")
+def generate(puid, pgid, tz, vpn, nzbget):
     """Generates a docker-compose file for an automated home media server"""
     compose_file = { "version": "2", "services": {} }
 
-    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz, "VERSION=docker"], [])
-    jackett_service = create_service("linuxserver/jackett", "jackett", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [])
-    sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [])
-    radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [])
-    transmission_service = create_service("haugene/transmission-openvpn", "transmission", ["PUID=" + puid, "PGID=" + pgid], [])
-    nzbget_service = create_service("linuxserver/nzbget", "nzbget", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [])
+    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz, "VERSION=docker"], [], 32400)
+    jackett_service = create_service("linuxserver/jackett", "jackett", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], 9117)
+    sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], 8989)
+    radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], 7878)
+
+    if vpn == "y":
+        provider = click.prompt("VPN Provider")
+        port = click.prompt("Transmission port", default=9091)
+
+        transmission_service = create_service("haugene/transmission-openvpn", 
+            "transmission",
+            ["PUID=" + puid, "PGID=" + pgid, "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
+            [],
+            port)
+
+    if nzbget == "y":
+        port = click.prompt("NZBGet port", default=6789)
+
+        nzbget_service = create_service("linuxserver/nzbget", 
+        "nzbget", 
+        ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], 
+        [],
+        port)
 
     compose_file["services"] = { 
         plex_service.get("container_name"): plex_service,
@@ -27,16 +46,16 @@ def generate(puid, pgid, tz):
 
     print(yaml.dump(compose_file))
 
-def create_service(image_name, container_name, env, volumes):
+def create_service(image_name, container_name, env, volumes, port):
     """Creates a template for a docker compose service"""
     return {
         "image": image_name,
         "container_name": container_name,
         "environment": env,
         "volumes": volumes,
+        "ports": ["{}:{}".format(port, port)],
         "restart": "always"
     }
-
 
 if __name__ == "__main__":
     generate()
