@@ -11,10 +11,10 @@ def generate(puid, pgid, tz, vpn, nzbget):
     """Generates a docker-compose file for an automated home media server"""
     compose_file = { "version": "2", "services": {} }
 
-    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz, "VERSION=docker"], [], 32400)
-    jackett_service = create_service("linuxserver/jackett", "jackett", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], 9117)
-    sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], 8989)
-    radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], 7878)
+    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz, "VERSION=docker"], [], [32400])
+    jackett_service = create_service("linuxserver/jackett", "jackett", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [9117])
+    sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [8989])
+    radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [7878])
 
     if vpn == "y":
         provider = click.prompt("VPN Provider")
@@ -24,7 +24,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
             "transmission",
             ["PUID=" + puid, "PGID=" + pgid, "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
             [],
-            port)
+            [port])
 
     if nzbget == "y":
         port = click.prompt("NZBGet port", default=6789)
@@ -33,7 +33,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
         "nzbget", 
         ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], 
         [],
-        port)
+        [port])
 
     compose_file["services"] = { 
         plex_service.get("container_name"): plex_service,
@@ -46,14 +46,14 @@ def generate(puid, pgid, tz, vpn, nzbget):
 
     print(yaml.dump(compose_file))
 
-def create_service(image_name, container_name, env, volumes, port):
+def create_service(image_name, container_name, env, volumes, ports):
     """Creates a template for a docker compose service"""
     return {
         "image": image_name,
         "container_name": container_name,
         "environment": env,
         "volumes": volumes,
-        "ports": ["{}:{}".format(port, port)],
+        "ports": ["{}:{}".format(p, p) for p in ports],
         "restart": "always"
     }
 
