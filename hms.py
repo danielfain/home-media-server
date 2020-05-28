@@ -17,6 +17,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
     radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [7878])
 
     if vpn == "y":
+        print("----TRANSMISSION SETUP----")
         provider = click.prompt("VPN Provider")
         port = click.prompt("Transmission port", default=9091)
 
@@ -27,6 +28,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
             [port])
 
     if nzbget == "y":
+        print("----NZBGET SETUP----")
         port = click.prompt("NZBGet port", default=6789)
 
         nzbget_service = create_service("linuxserver/nzbget", 
@@ -34,6 +36,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
         ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], 
         [],
         [port])
+
 
     compose_file["services"] = { 
         plex_service.get("container_name"): plex_service,
