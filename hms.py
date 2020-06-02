@@ -2,8 +2,8 @@ import click
 import yaml
 
 @click.command()
-@click.option("--puid", prompt="PUID")
-@click.option("--pgid", prompt="PGID")
+@click.option("--puid", prompt="PUID", type=int)
+@click.option("--pgid", prompt="PGID", type=int)
 @click.option("--tz", prompt="Timezone", default="America/New_York")
 @click.option("--vpn", prompt="Transmission + VPN", default="y")
 @click.option("--nzbget", prompt="NZBGet", default="y")
@@ -18,8 +18,8 @@ def generate(puid, pgid, tz, vpn, nzbget):
 
     if vpn == "y":
         print("----TRANSMISSION SETUP----")
-        provider = click.prompt("VPN Provider")
-        port = click.prompt("Transmission port", default=9091)
+        provider = click.prompt("VPN Provider", type=str)
+        port = click.prompt("Transmission port", default=9091, type=int)
 
         transmission_service = create_service("haugene/transmission-openvpn", 
             "transmission",
@@ -29,7 +29,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
 
     if nzbget == "y":
         print("----NZBGET SETUP----")
-        port = click.prompt("NZBGet port", default=6789)
+        port = click.prompt("NZBGet port", default=6789, type=int)
 
         nzbget_service = create_service("linuxserver/nzbget", 
         "nzbget", 
