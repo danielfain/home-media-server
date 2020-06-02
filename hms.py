@@ -11,10 +11,10 @@ def generate(puid, pgid, tz, vpn, nzbget):
     """Generates a docker-compose file for an automated home media server"""
     compose_file = { "version": "2", "services": {} }
 
-    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz, "VERSION=docker"], [], [32400])
-    jackett_service = create_service("linuxserver/jackett", "jackett", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [9117])
-    sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [8989])
-    radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], [], [7878])
+    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz, "VERSION=docker"], [], [32400])
+    jackett_service = create_service("linuxserver/jackett", "jackett", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], [], [9117])
+    sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], [], [8989])
+    radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], [], [7878])
 
     if vpn == "y":
         print("----TRANSMISSION SETUP----")
@@ -23,7 +23,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
 
         transmission_service = create_service("haugene/transmission-openvpn", 
             "transmission",
-            ["PUID=" + puid, "PGID=" + pgid, "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
+            ["PUID=" + str(puid), "PGID=" + str(pgid), "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
             [],
             [port])
 
@@ -33,7 +33,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
 
         nzbget_service = create_service("linuxserver/nzbget", 
         "nzbget", 
-        ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz], 
+        ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
         [],
         [port])
 
@@ -47,7 +47,9 @@ def generate(puid, pgid, tz, vpn, nzbget):
         nzbget_service.get("container_name"): nzbget_service
     }
 
-    print(yaml.dump(compose_file))
+    file = open("docker-compose.yml", "w")
+    file.write(yaml.dump(compose_file))
+    file.close()
 
 def create_service(image_name, container_name, env, volumes, ports):
     """Creates a template for a docker compose service"""
