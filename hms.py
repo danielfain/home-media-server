@@ -5,9 +5,7 @@ import yaml
 @click.option("--puid", prompt="PUID", type=int)
 @click.option("--pgid", prompt="PGID", type=int)
 @click.option("--tz", prompt="Timezone", default="America/New_York")
-@click.option("--vpn", prompt="Transmission + VPN", default="y")
-@click.option("--nzbget", prompt="NZBGet", default="y")
-def generate(puid, pgid, tz, vpn, nzbget):
+def generate(puid, pgid, tz):
     """Generates a docker-compose file for an automated home media server"""
     compose_file = { "version": "2", "services": {} }
 
@@ -16,7 +14,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
     sonarr_service = create_service("linuxserver/sonarr", "sonarr", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], [], [8989])
     radarr_service = create_service("linuxserver/radarr", "radarr", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], [], [7878])
 
-    if vpn == "y":
+    if click.prompt("Transmission + VPN", default="y", type=str) == "y":
         print("----TRANSMISSION SETUP----")
         provider = click.prompt("VPN Provider", type=str)
         port = click.prompt("Transmission port", default=9091, type=int)
@@ -26,8 +24,9 @@ def generate(puid, pgid, tz, vpn, nzbget):
             ["PUID=" + str(puid), "PGID=" + str(pgid), "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
             [],
             [port])
+        print("--------------------------")
 
-    if nzbget == "y":
+    if click.prompt("NZBGet", default="y", type=str) == "y":
         print("----NZBGET SETUP----")
         port = click.prompt("NZBGet port", default=6789, type=int)
 
@@ -36,7 +35,7 @@ def generate(puid, pgid, tz, vpn, nzbget):
         ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
         [],
         [port])
-
+        print("--------------------------")
 
     compose_file["services"] = { 
         plex_service.get("container_name"): plex_service,
