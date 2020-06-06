@@ -4,12 +4,25 @@ import yaml
 @click.command()
 @click.option("--puid", prompt="PUID", type=int)
 @click.option("--pgid", prompt="PGID", type=int)
-@click.option("--tz", prompt="Timezone", default="America/New_York")
-def generate(puid, pgid, tz):
+@click.option("--tz", prompt="Timezone", default="America/New_York", type=str)
+@click.option("--config-path", prompt="Absolute path to config folder", type=str)
+def generate(puid, pgid, tz, config_path):
     """Generates a docker-compose file for an automated home media server"""
     compose_file = { "version": "2", "services": {} }
 
-    plex_service = create_service("linuxserver/plex", "plex", ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz, "VERSION=docker"], [], [32400])
+    num_volumes = click.prompt("Number of media volumes for Plex", default=1, type=int)
+
+    media = []
+
+    for i in range(num_volumes):
+        volume_path = click.prompt("Absolute path of media volume " + str(i + 1), type=str)
+        media.append(volume_path)
+
+    plex_service = create_service("linuxserver/plex", 
+        "plex", 
+        ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz, "VERSION=docker"], 
+        ["{}/plex:/config".format(config_path)], 
+        [32400])
 
     if click.prompt("Transmission + VPN", default="y", type=str) == "y":
         print("----TRANSMISSION SETUP----")
@@ -33,7 +46,7 @@ def generate(puid, pgid, tz):
         nzbget_service = create_service("linuxserver/nzbget", 
             "nzbget", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            [],
+            ["{}/nzbget:/config".format(config_path)],
             [port])
 
         compose_file["services"]["nzbget"] = nzbget_service
@@ -47,7 +60,7 @@ def generate(puid, pgid, tz):
         sonarr_service = create_service("linuxserver/sonarr", 
             "sonarr", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            [],
+            ["{}/sonarr:/config".format(config_path)],
             [port])
         
         compose_file["services"]["sonarr"] = sonarr_service
@@ -61,7 +74,7 @@ def generate(puid, pgid, tz):
         radarr_service = create_service("linuxserver/radarr", 
             "radarr", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            [],
+            ["{}/radarr:/config".format(config_path)],
             [port])
 
         compose_file["services"]["radarr"] = radarr_service
@@ -75,7 +88,7 @@ def generate(puid, pgid, tz):
         jackett_service = create_service("linuxserver/jackett", 
             "jackett", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            [],
+            ["{}/jackett:/config".format(config_path)],
             [port])
 
         compose_file["services"]["jackett"] = jackett_service
