@@ -16,13 +16,15 @@ def generate(puid, pgid, tz, config_path):
 
     for i in range(num_volumes):
         volume_path = click.prompt("Absolute path of media volume " + str(i + 1), type=str)
-        media.append(volume_path)
+        media.append(volume_path + ":/Media" + str(i + 1))
 
     plex_service = create_service("linuxserver/plex", 
         "plex", 
         ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz, "VERSION=docker"], 
-        ["{}/plex:/config".format(config_path)], 
+        ["{}/plex:/config".format(config_path)].extend(media), 
         [32400])
+
+    compose_file["services"]["plex"] = plex_service
 
     if click.prompt("Transmission + VPN", default="y", type=str) == "y":
         print("----TRANSMISSION SETUP----")
