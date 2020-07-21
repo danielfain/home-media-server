@@ -40,7 +40,7 @@ def generate(puid, pgid, tz, config_path):
             ["{}/transmission/downloads:/downloads".format(config_path)],
             [port])
 
-        transmission_service["cap_add"] = "NET_ADMIN"
+        transmission_service["cap_add"] = ["NET_ADMIN"]
             
         compose_file["services"]["transmission"] = transmission_service
 
@@ -64,13 +64,15 @@ def generate(puid, pgid, tz, config_path):
     if click.prompt("Sonarr", default="y", type=str) == "y":
         print("-------SONARR SETUP-------")
         port = click.prompt("Port", default=8989, type=int)
+        tv_path = click.prompt("Absolute path to Plex TV directory", type=str)
 
         sonarr_service = create_service("linuxserver/sonarr", 
             "sonarr", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
             ["{}/sonarr:/config".format(config_path), 
             "{}/transmission/downloads:/torrents".format(config_path),
-            "{}/nzbget/downloads:/nzbs".format(config_path)],
+            "{}/nzbget/downloads:/nzbs".format(config_path),
+            tv_path],
             [port])
         
         compose_file["services"]["sonarr"] = sonarr_service
@@ -80,13 +82,15 @@ def generate(puid, pgid, tz, config_path):
     if click.prompt("Radarr", default="y", type=str) == "y":
         print("-------RADARR SETUP-------")
         port = click.prompt("Port", default=7878, type=int)
+        movie_path = click.prompt("Absolute path to Plex movie directory", type=str)
 
         radarr_service = create_service("linuxserver/radarr", 
             "radarr", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
             ["{}/radarr:/config".format(config_path),
             "{}/transmission/downloads:/torrents".format(config_path),
-            "{}/nzbget/downloads:/nzbs".format(config_path)],
+            "{}/nzbget/downloads:/nzbs".format(config_path),
+            movie_path],
             [port])
 
         compose_file["services"]["radarr"] = radarr_service
@@ -113,6 +117,7 @@ def generate(puid, pgid, tz, config_path):
 
 def create_service(image_name, container_name, env, volumes, ports):
     """Creates a template for a docker compose service"""
+
     return {
         "image": image_name,
         "container_name": container_name,
