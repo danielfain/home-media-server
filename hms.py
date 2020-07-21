@@ -31,12 +31,17 @@ def generate(puid, pgid, tz, config_path):
 
     if click.prompt("Transmission + VPN", default="y", type=str) == "y":
         print("----TRANSMISSION SETUP----")
-        provider = click.prompt("VPN Provider", type=str)
         port = click.prompt("Port", default=9091, type=int)
+        provider = click.prompt("VPN Provider", type=str)
+        config = click.prompt("VPN Location", type=str)
+        username = click.prompt("VPN Username", type=str)
+        password = click.prompt("VPN Password", type=str)
+        lan = click.prompt("LAN Subnet", default="192.168.1.0/24" , type=str)
 
         transmission_service = create_service("haugene/transmission-openvpn", 
             "transmission",
-            ["PUID=" + str(puid), "PGID=" + str(pgid), "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
+            ["PUID=" + str(puid), "PGID=" + str(pgid), "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider, 
+            "OPENVPN_CONFIG=" + config, "OPENVPN_USERNAME=" + username, "OPENVPN_PASSWORD=" + password, "LOCAL_NETWORK=" + lan],
             ["{}/transmission/downloads:/downloads".format(config_path)],
             [port])
 
@@ -72,7 +77,7 @@ def generate(puid, pgid, tz, config_path):
             ["{}/sonarr:/config".format(config_path), 
             "{}/transmission/downloads:/torrents".format(config_path),
             "{}/nzbget/downloads:/nzbs".format(config_path),
-            tv_path],
+            tv_path + ":/tv"],
             [port])
         
         compose_file["services"]["sonarr"] = sonarr_service
@@ -90,7 +95,7 @@ def generate(puid, pgid, tz, config_path):
             ["{}/radarr:/config".format(config_path),
             "{}/transmission/downloads:/torrents".format(config_path),
             "{}/nzbget/downloads:/nzbs".format(config_path),
-            movie_path],
+            movie_path + ":/movies"],
             [port])
 
         compose_file["services"]["radarr"] = radarr_service
