@@ -19,6 +19,7 @@ def generate(puid, pgid, tz, config_path):
         media_vols.append(volume_path + ":/Media" + str(i + 1))
 
     media_vols.append("{}/plex:/config".format(config_path))
+    media_vols.append(config_path + "/plex/transcode:/transcode")
 
     plex_service = create_service("linuxserver/plex", 
         "plex", 
@@ -36,8 +37,10 @@ def generate(puid, pgid, tz, config_path):
         transmission_service = create_service("haugene/transmission-openvpn", 
             "transmission",
             ["PUID=" + str(puid), "PGID=" + str(pgid), "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + provider],
-            [],
+            ["{}/transmission/downloads:/downloads".format(config_path)],
             [port])
+
+        transmission_service["cap_add"] = "NET_ADMIN"
             
         compose_file["services"]["transmission"] = transmission_service
 
@@ -50,7 +53,8 @@ def generate(puid, pgid, tz, config_path):
         nzbget_service = create_service("linuxserver/nzbget", 
             "nzbget", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            ["{}/nzbget:/config".format(config_path)],
+            ["{}/nzbget:/config".format(config_path), 
+            "{}/nzbget/downloads:/downloads".format(config_path)],
             [port])
 
         compose_file["services"]["nzbget"] = nzbget_service
@@ -64,7 +68,9 @@ def generate(puid, pgid, tz, config_path):
         sonarr_service = create_service("linuxserver/sonarr", 
             "sonarr", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            ["{}/sonarr:/config".format(config_path)],
+            ["{}/sonarr:/config".format(config_path), 
+            "{}/transmission/downloads:/torrents".format(config_path),
+            "{}/nzbget/downloads:/nzbs".format(config_path)],
             [port])
         
         compose_file["services"]["sonarr"] = sonarr_service
@@ -78,7 +84,9 @@ def generate(puid, pgid, tz, config_path):
         radarr_service = create_service("linuxserver/radarr", 
             "radarr", 
             ["PUID=" + str(puid), "PGID=" + str(pgid), "TZ=" + tz], 
-            ["{}/radarr:/config".format(config_path)],
+            ["{}/radarr:/config".format(config_path),
+            "{}/transmission/downloads:/torrents".format(config_path),
+            "{}/nzbget/downloads:/nzbs".format(config_path)],
             [port])
 
         compose_file["services"]["radarr"] = radarr_service
