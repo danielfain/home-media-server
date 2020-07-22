@@ -119,10 +119,50 @@ def ask_plex():
 
     return answers
 
+def ask_transmission():
+    answers = {}
+
+    if 'Transmission (w/ OpenVPN)' in default_answers['services']:
+        transmission_questions = [
+            {
+            'type': 'input',
+            'name': 'vpn_provider',
+            'message': 'Who is your VPN provider?',
+            'default': 'PIA',
+            # 'validate': TODO import list of supported providers and check here
+            },
+            {
+            'type': 'input',
+            'name': 'vpn_config',
+            'message': 'Which location for your VPN?',
+            # 'validate': TODO import list of configs and check here
+            },
+            {
+            'type': 'input',
+            'name': 'vpn_username',
+            'message': 'What is your username for your VPN?',
+            },
+            {
+            'type': 'password',
+            'name': 'vpn_password',
+            'message': 'What is your password for your VPN?',
+            },
+            {
+            'type': 'input',
+            'name': 'local_network',
+            'message': 'What is your LAN subnet?',
+            'default': '192.168.1.0/24',
+            },
+        ]
+        answers = prompt(transmission_questions)
+
+    return answers
+
 if __name__ == "__main__":
     default_answers = prompt(default_questions)        
     plex_answers = ask_plex()
+    transmission_answers = ask_transmission()
 
-    answers = {**default_answers, **plex_answers} # merges dicts
+    answers = {**default_answers, **plex_answers, **transmission_answers} # merges dicts
 
     generate_compose_file(answers)
