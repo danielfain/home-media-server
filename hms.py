@@ -4,7 +4,7 @@ import os
 
 def generate_compose_file(answers):
     """Generates the Docker Compose file from PyInquirer's answers"""
-    print_json(answers)
+    print(answers)
     return
 
     compose_file = { 'version': '2', 'services': {} }
@@ -36,7 +36,7 @@ def create_service(image_name, container_name, env, volumes, ports):
         "restart": "always"
     }
 
-questions = [
+default_questions = [
     {
         'type': 'input',
         'name': 'puid',
@@ -92,15 +92,37 @@ questions = [
         'validate': lambda answer: 'You must choose at least one service.' \
             if len(answer) == 0 else True
     },
-    {
-        'type': 'input',
-        'name': 'num_media_volumes',
-        'message': 'How many media volumes do you have for Plex?',
-        'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
-        'when': lambda answers: 'Plex' in answers['services']
-    },
 ]
 
+def ask_plex():
+    answers = {}
+
+    if 'Plex' in default_answers['services']:
+        num_media = prompt({
+            'type': 'input',
+            'name': 'num_media_vols',
+            'message': 'How many media volumes do you have for Plex?',
+            'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
+        })
+
+        answers['num_media_vols'] = num_media['num_media_vols']
+        answers['media_vols'] = []
+
+        for i in range(int(num_media['num_media_vols'])):
+            media_path = prompt({
+                'type': 'input',
+                'name': 'path',
+                'message': 'What is the absolute path for media volume ' + str(i + 1) + '?',
+                'validate': lambda answer: os.path.exists(answer) or 'Please enter a valid directory path.',
+            })
+            answers.get('media_vols').append(media_path['path'])
+
+    return answers
+
 if __name__ == "__main__":
-    answers = prompt(questions)
+    default_answers = prompt(default_questions)        
+    plex_answers = ask_plex()
+
+    answers = {**default_answers, **plex_answers} # merges dicts
+
     generate_compose_file(answers)
