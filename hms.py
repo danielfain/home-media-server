@@ -126,6 +126,13 @@ def ask_transmission():
         transmission_questions = [
             {
             'type': 'input',
+            'name': 'transmission_port',
+            'message': 'Which port should Transmission be on?',
+            'default': '9091',
+            'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
+            },
+            {
+            'type': 'input',
             'name': 'vpn_provider',
             'message': 'Who is your VPN provider?',
             'default': 'PIA',
@@ -158,11 +165,29 @@ def ask_transmission():
 
     return answers
 
+def ask_nzbget():
+    answers = {}
+
+    if 'NZBGet' in default_answers['services']:
+        nzbget_questions = [
+            {
+            'type': 'input',
+            'name': 'nzbget_port',
+            'message': 'Which port should NZBGet be on?',
+            'default': '6789',
+            'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
+            },
+        ]
+        answers = prompt(nzbget_questions)
+
+    return answers
+
 if __name__ == "__main__":
     default_answers = prompt(default_questions)        
     plex_answers = ask_plex()
     transmission_answers = ask_transmission()
+    nzbget_answers = ask_nzbget()
 
-    answers = {**default_answers, **plex_answers, **transmission_answers} # merges dicts
+    answers = {**default_answers, **plex_answers, **transmission_answers, **nzbget_answers} # merges dicts
 
     generate_compose_file(answers)
