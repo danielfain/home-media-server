@@ -182,12 +182,78 @@ def ask_nzbget():
 
     return answers
 
+def ask_sonarr():
+    answers = {}
+
+    if 'Sonarr' in default_answers['services']:
+        sonarr_questions = [
+            {
+            'type': 'input',
+            'name': 'sonarr_port',
+            'message': 'Which port should Sonarr be on?',
+            'default': '8989',
+            'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
+            },
+            {
+            'type': 'input',
+            'name': 'tv_path',
+            'message': 'Which directory from your media volume(s) contain your TV shows?',
+            'validate': lambda answer: os.path.exists(answer) or 'Please enter a valid directory path.',
+            },
+        ]
+        answers = prompt(sonarr_questions)
+
+    return answers
+
+def ask_radarr():
+    answers = {}
+
+    if 'Radarr' in default_answers['services']:
+        radarr_questions = [
+            {
+            'type': 'input',
+            'name': 'radarr_port',
+            'message': 'Which port should Radarr be on?',
+            'default': '7878',
+            'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
+            },
+            {
+            'type': 'input',
+            'name': 'movie_path',
+            'message': 'Which directory from your media volume(s) contain your movies?',
+            'validate': lambda answer: os.path.exists(answer) or 'Please enter a valid directory path.',
+            },
+        ]
+        answers = prompt(radarr_questions)
+
+    return answers
+
+def ask_jackett():
+    answers = {}
+
+    if 'Jackett' in default_answers['services']:
+        jackett_questions = [
+            {
+            'type': 'input',
+            'name': 'jackett_port',
+            'message': 'Which port should Jackett be on?',
+            'default': '9117',
+            'validate': lambda answer: answer.isdigit() or 'Please enter an integer.',
+            },
+        ]
+        answers = prompt(jackett_questions)
+
+    return answers
+
 if __name__ == "__main__":
     default_answers = prompt(default_questions)        
     plex_answers = ask_plex()
     transmission_answers = ask_transmission()
     nzbget_answers = ask_nzbget()
+    sonarr_answers = ask_sonarr()
+    radarr_answers = ask_radarr()
+    jackett_answers = ask_jackett()
 
-    answers = {**default_answers, **plex_answers, **transmission_answers, **nzbget_answers} # merges dicts
+    answers = {**default_answers, **plex_answers, **transmission_answers, **nzbget_answers, **sonarr_answers, **radarr_answers, **jackett_answers} # merges dicts
 
     generate_compose_file(answers)
