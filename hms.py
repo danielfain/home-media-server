@@ -1,39 +1,45 @@
-from PyInquirer import prompt, print_json, Separator
+from PyInquirer import prompt, Separator
 import yaml
 import os
 
 def generate_compose_file(answers):
-    """Generates the Docker Compose file from PyInquirer's answers"""
-    print(answers)
-    return
-
+    '''Generates the Docker Compose file from PyInquirer's answers'''
     compose_file = { 'version': '2', 'services': {} }
 
-    puid = answers["puid"]
-    pgid = answers["pgid"]
-    tz = answers["tz"]
+    puid = answers['puid']
+    pgid = answers['pgid']
+    tz = answers['tz']
+    config_path = answers['config_path']
 
-    plex_service = create_service('linuxserver/plex', 
-        'plex', 
-        ["PUID=" + puid, "PGID=" + pgid, "TZ=" + tz, "VERSION=docker"], 
-        media_vols, 
-        [32400])
+    if 'Plex' in answers['services']:
+        compose_file['services']['plex'] = create_service('linuxserver/plex', 
+            'plex', 
+            ['PUID=' + puid, 'PGID=' + pgid, 'TZ=' + tz, 'VERSION=docker'], 
+            answers['media_vols'] + [], 
+            [32400])
 
-    compose_file["services"]["plex"] = plex_service
+    if 'Transmission' in answers['services']: 
+        compose_file['services']['transmission'] = create_service('haugene/transmission-openvpn', 
+            'transmission', 
+            ['PUID=' + puid, 'PGID=' + pgid, "CREATE_TUN_DEVICE=true", "OPENVPN_PROVIDER=" + answers['vpn_provider'], 
+            "OPENVPN_CONFIG=" + answers['vpn_config'], "OPENVPN_USERNAME=" + answers['vpn_username'], 
+            "OPENVPN_PASSWORD=" + answers['vpn_password'], "LOCAL_NETWORK=" + answers['local_network']], 
+            ['{}/transmission/downloads:/downloads'.format(config_path)], 
+            [answers['transmission_port']])
 
-    file = open("docker-compose.yml", "w")
+    file = open('docker-compose.yml', 'w')
     file.write(yaml.dump(compose_file))
     file.close()
 
 def create_service(image_name, container_name, env, volumes, ports):
-    """Creates a template for a docker compose service"""
+    '''Creates a template for a docker compose service'''
     return {
-        "image": image_name,
-        "container_name": container_name,
-        "environment": env,
-        "volumes": volumes,
-        "ports": ["{}:{}".format(p, p) for p in ports],
-        "restart": "always"
+        'image': image_name,
+        'container_name': container_name,
+        'environment': env,
+        'volumes': volumes,
+        'ports': ['{}:{}'.format(p, p) for p in ports],
+        'restart': 'always'
     }
 
 default_questions = [
@@ -72,7 +78,7 @@ default_questions = [
             },
             Separator('= Media Downloaders ='),
             {
-                'name': 'Transmission (w/ OpenVPN)'
+                'name': 'Transmission'
             },
             {
                 'name': 'NZBGet'
@@ -115,14 +121,14 @@ def ask_plex():
                 'message': 'What is the absolute path for media volume ' + str(i + 1) + '?',
                 'validate': lambda answer: os.path.exists(answer) or 'Please enter a valid directory path.',
             })
-            answers.get('media_vols').append(media_path['path'])
+            answers.get('media_vols').append(media_path['path'] + ':/Media' + str(i + 1))
 
     return answers
 
 def ask_transmission():
     answers = {}
 
-    if 'Transmission (w/ OpenVPN)' in default_answers['services']:
+    if 'Transmission' in default_answers['services']:
         transmission_questions = [
             {
             'type': 'input',
@@ -245,7 +251,7 @@ def ask_jackett():
 
     return answers
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     default_answers = prompt(default_questions)        
     plex_answers = ask_plex()
     transmission_answers = ask_transmission()
