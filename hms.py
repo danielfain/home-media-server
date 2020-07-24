@@ -15,7 +15,7 @@ def generate_compose_file(answers):
         compose_file['services']['plex'] = create_service('linuxserver/plex', 
             'plex', 
             ['PUID=' + puid, 'PGID=' + pgid, 'TZ=' + tz, 'VERSION=docker'], 
-            answers['media_vols'] + [], 
+            answers['media_vols'] + ['{}/plex:/config'.format(config_path)], 
             [32400])
 
     if 'Transmission' in answers['services']: 
@@ -26,6 +26,41 @@ def generate_compose_file(answers):
             "OPENVPN_PASSWORD=" + answers['vpn_password'], "LOCAL_NETWORK=" + answers['local_network']], 
             ['{}/transmission/downloads:/downloads'.format(config_path)], 
             [answers['transmission_port']])
+
+    if 'NZBGet' in answers['services']:
+        compose_file['services']['nzbget'] = create_service('linuxserver/nzbget', 
+            'nzbget', 
+            ['PUID=' + puid, 'PGID=' + pgid, 'TZ=' + tz], 
+            ['{}/nzbget:/config'.format(config_path), 
+            '{}/nzbget/downloads:/downloads'.format(config_path)], 
+            [answers['nzbget_port']])
+
+    if 'Sonarr' in answers['services']:
+        compose_file['services']['sonarr'] = create_service('linuxserver/sonarr', 
+            'sonarr', 
+            ['PUID=' + puid, 'PGID=' + pgid, 'TZ=' + tz], 
+            ['{}/sonarr:/config'.format(config_path), 
+            '{}/transmission/downloads:/torrents'.format(config_path),
+            '{}/nzbget/downloads:/nzbs'.format(config_path),
+            answers['tv_path'] + ':/tv'], 
+            [answers['sonarr_port']])
+
+    if 'Radarr' in answers['services']:
+        compose_file['services']['radarr'] = create_service('linuxserver/radarr', 
+            'radarr', 
+            ['PUID=' + puid, 'PGID=' + pgid, 'TZ=' + tz], 
+            ['{}/radarr:/config'.format(config_path), 
+            '{}/transmission/downloads:/torrents'.format(config_path),
+            '{}/nzbget/downloads:/nzbs'.format(config_path),
+            answers['movie_path'] + ':/movies'], 
+            [answers['radarr_port']])
+
+    if 'Jackett' in answers['services']:
+        compose_file['services']['jackett'] = create_service('linuxserver/jackett', 
+            'jackett', 
+            ['PUID=' + puid, 'PGID=' + pgid, 'TZ=' + tz], 
+            ['{}/jackett:/config'.format(config_path)], 
+            [answers['jackett_port']])
 
     file = open('docker-compose.yml', 'w')
     file.write(yaml.dump(compose_file))
